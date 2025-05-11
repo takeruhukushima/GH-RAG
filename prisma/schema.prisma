@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Repository {
+  id          String     @id
+  name        String
+  owner       String
+  license     String?
+  lastIndexed DateTime   @default(now())
+  documents   Document[]
+
+  @@index([owner, name])
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  repoId    String
+  type      String   @db.VarChar(10) // 'code' or 'document'
+  content   String   @db.Text
+  path      String
+  license   String?
+  embedding Float[]  @db.Vector(1536) // OpenAIのembeddingサイズ
+  repo      Repository @relation(fields: [repoId], references: [id])
+
+  @@unique([repoId, path])
+  @@index([embedding], type: Vector)
+}

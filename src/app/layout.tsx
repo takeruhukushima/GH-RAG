@@ -1,5 +1,5 @@
 import '@/styles/globals.css';
-import { RepoSidebar } from '@/components/RepoSidebar';
+import Sidebar from '@/components/Sidebar';
 
 export const metadata = {
   title: 'GitHub RAG Chat',
@@ -14,7 +14,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body className="flex min-h-screen">
-        <RepoSidebar />
+        <Sidebar />
         <main className="flex-1 p-6 overflow-y-auto">{children}</main>
       </body>
     </html>
