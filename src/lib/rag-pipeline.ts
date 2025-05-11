@@ -3,13 +3,22 @@ import { searchVectorStore } from './vector-store';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
+interface SearchResultChunk {
+  content: string;
+  metadata: {
+    path: string;
+    type: string;
+    license?: string | null;
+  };
+}
+
 export async function generateResponse(query: string) {
   // 関連するチャンクを検索
-  const relevantChunks = await searchVectorStore(query);
+  const relevantChunks: SearchResultChunk[] = await searchVectorStore(query);
 
   // コンテキストの構築
-  const context = relevantChunks.map(chunk => {
-    const citation = chunk.metadata.license 
+  const context = relevantChunks.map((chunk: SearchResultChunk) => {
+    const citation = chunk.metadata.license
       ? `\nSource: ${chunk.metadata.path} (License: ${chunk.metadata.license})`
       : `\nSource: ${chunk.metadata.path}`;
     return chunk.content + citation;

@@ -23,7 +23,7 @@ async function indexRepository(owner: string, repo: string) {
         id: repoData.id.toString(),
         name: repo,
         owner: owner,
-        license: repoData.license?.spdx_id,
+        license: repoData.license?.spdx_id ?? undefined,
       },
       update: {
         lastIndexed: new Date(),
@@ -41,6 +41,10 @@ async function indexRepository(owner: string, repo: string) {
     // ファイルの処理
     for (const item of tree.tree) {
       if (item.type !== 'blob') continue;
+      if (!item.path) {
+        console.warn('Skipping tree item with no path:', item);
+        continue;
+      }
 
       try {
         const { data: content } = await octokit.rest.repos.getContent({
@@ -49,7 +53,7 @@ async function indexRepository(owner: string, repo: string) {
           path: item.path,
         });
 
-        if (Array.isArray(content)) continue; // ディレクトリの場合はスキップ
+        if (Array.isArray(content) || !('content' in content)) continue; // ディレクトリやcontentプロパティがない場合はスキップ
 
         const isCode = item.path.match(/\\.(js|ts|py|java|go|rb|php|cs|cpp|h)$/i);
         const rawContent = Buffer.from(content.content, 'base64').toString();
@@ -71,7 +75,7 @@ async function indexRepository(owner: string, repo: string) {
             embedding,
             metadata: {
               path: item.path + (chunks.length > 1 ? ` (part ${index + 1})` : ''),
-              license: repoData.license?.spdx_id,
+              license: repoData.license?.spdx_id ?? undefined,
             },
           });
         }
@@ -106,7 +110,7 @@ async function indexRepository(owner: string, repo: string) {
         embedding,
         metadata: {
           path: `Issue #${issue.number}: ${issue.title}`,
-          license: repoData.license?.spdx_id,
+          license: repoData.license?.spdx_id ?? undefined,
         },
       });
 

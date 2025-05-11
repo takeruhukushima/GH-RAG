@@ -51,10 +51,17 @@ async function handlePushEvent(octokit: Octokit, payload: any) {
         ref: commit.id,
       });
 
+      // contentが配列の場合(ディレクトリなど)またはファイルでない場合はスキップ
+      if (Array.isArray(content) || !('content' in content) || typeof content.content !== 'string') {
+        console.warn(`Skipping ${file.filename} as it's not a file or content is missing.`);
+        continue;
+      }
+
+      const rawFileContent = Buffer.from(content.content, 'base64').toString();
       const isCode = file.filename.match(/\.(js|ts|py|java|go|rb|php|cs|cpp|h)$/i);
       const preprocessed = isCode
-        ? preprocessCode(content)
-        : preprocessDocument(content);
+        ? preprocessCode(rawFileContent)
+        : preprocessDocument(rawFileContent);
 
       await saveToIndex({
         content: preprocessed,
