@@ -1,6 +1,6 @@
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["vector"]
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
@@ -26,9 +26,9 @@ model Document {
   content   String   @db.Text
   path      String
   license   String?
-  embedding Float[]  @db.Vector(1536) // OpenAIのembeddingサイズ
+  embedding Float[] // OpenAIのembeddingサイズ
   repo      Repository @relation(fields: [repoId], references: [id])
 
   @@unique([repoId, path])
-  @@index([embedding], type: Vector)
+  @@index([embedding])
 }

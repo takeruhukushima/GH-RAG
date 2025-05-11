@@ -35,11 +35,19 @@ export async function upsertToVectorStore(data: VectorStoreInput) {
   });
 }
 
+interface RawQueryResult {
+  content: string;
+  path: string;
+  type: string;
+  license: string | null;
+  similarity: number;
+}
+
 export async function searchVectorStore(query: string, limit = 5) {
   const queryEmbedding = await createEmbedding(query);
   
   // pgvectorを使用したコサイン類似度検索
-  const results = await prisma.$queryRaw`
+  const results = await prisma.$queryRaw<RawQueryResult[]>`
     SELECT 
       d.content,
       d.path,
@@ -51,7 +59,7 @@ export async function searchVectorStore(query: string, limit = 5) {
     LIMIT ${limit}
   `;
 
-  return results.map((result: any) => ({
+  return results.map((result: RawQueryResult) => ({
     content: result.content,
     metadata: {
       path: result.path,
